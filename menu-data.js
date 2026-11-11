@@ -100,6 +100,7 @@ function csvToMenu(text) {
       // Sheets may export a %-formatted cell as 0.062
       abv = isNaN(n) ? abv : (n < 1 ? +(n * 100).toFixed(1) : n) + "%";
     }
+    if (parseFloat(abv) === 0) abv = ""; // hide 0% on non-alcoholic drinks
     byName[cat].beers.push({
       tapNo: get(r, "tapNo"), name, style: get(r, "style"), abv,
       description: get(r, "desc"), serving: get(r, "serving"), price: money(get(r, "price")), fourPack: money(get(r, "fourPack")),
