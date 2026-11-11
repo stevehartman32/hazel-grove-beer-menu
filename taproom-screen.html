@@ -102,6 +102,10 @@
     color: var(--cream); opacity: .6;
   }
   #status.err { color: var(--yellow); opacity: 1; }
+
+  /* Bouncing HGB monogram: hidden and idle except during its run */
+  #hgb-ball { position: fixed; left: 0; top: 0; pointer-events: none; visibility: hidden; z-index: 5; }
+  #hgb-ball span, #hgb-ball img { display: block; width: 100%; height: 100%; }
 </style>
 </head>
 <body>
@@ -118,9 +122,10 @@
   </footer>
 
   <div id="status"></div>
+  <div id="hgb-ball" aria-hidden="true"><span><img src="assets/monogram-light-green.svg" alt=""></span></div>
 
-<script>window.HGB_BUILD = "20261111-6";</script>
-<script src="menu-data.js?v=20261111-6"></script>
+<script>window.HGB_BUILD = "20261111-7";</script>
+<script src="menu-data.js?v=20261111-7"></script>
 <script>
   const menuEl = document.getElementById("menu");
   const boxEl = document.getElementById("box");
@@ -166,6 +171,43 @@
       error ? `Couldn't load Google Sheet: ${error} — showing sample menu` :
       "Sample menu — connect your Google Sheet in menu-data.js";
   }
+
+  /* HGB monogram bounces left-to-right below the lowest beer. It runs ~10s,
+     then sits hidden until the next run, so the screen is idle in between.
+     Animations are transform-only (GPU-composited). Add ?bounce=test to the
+     URL to see it every 15 seconds. */
+  const ball = document.getElementById("hgb-ball");
+  const hop = ball.firstElementChild;
+  const spin = hop.firstElementChild;
+  function bounceLogo() {
+    if (document.hidden || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const vh = innerHeight / 100;
+    let lowest = 0;
+    menuEl.querySelectorAll(".beer").forEach(b => { lowest = Math.max(lowest, b.getBoundingClientRect().bottom); });
+    const floor = innerHeight - 1.5 * vh;              // where it lands
+    const lane = floor - (lowest + 1.5 * vh);           // free space under the lowest beer
+    const size = Math.max(4 * vh, Math.min(9 * vh, lane * 0.55));
+    const height = Math.max(0, Math.min(lane - size, 14 * vh));
+    ball.style.width = ball.style.height = size + "px";
+    ball.style.top = (floor - size) + "px";
+    ball.style.visibility = "visible";
+
+    const duration = 10000, hops = 5, frames = [];
+    for (let i = 0; i <= hops * 2; i++) {
+      const up = i % 2 === 1;
+      const decay = 1 - (i / (hops * 2)) * 0.45;        // each hop a little lower
+      frames.push({ offset: i / (hops * 2), transform: `translateY(${up ? -height * decay : 0}px)`,
+                    easing: up ? "ease-in" : "ease-out" });
+    }
+    const roll = (innerWidth + size) / (Math.PI * size) * 360;
+    const move = ball.animate([{ transform: `translateX(${-size}px)` }, { transform: `translateX(${innerWidth}px)` }],
+                              { duration, easing: "linear" });
+    hop.animate(frames, { duration });
+    spin.animate([{ transform: "rotate(0deg)" }, { transform: `rotate(${roll}deg)` }], { duration, easing: "linear" });
+    move.onfinish = () => { ball.style.visibility = "hidden"; };
+  }
+  const bounceEvery = new URLSearchParams(location.search).get("bounce") === "test" ? 15000 : 120000;
+  setInterval(bounceLogo, bounceEvery);
 
   document.fonts.ready.then(refresh);
   window.addEventListener("resize", fit);
