@@ -74,7 +74,7 @@
     flex: 1;
   }
   .beer .price { font-family: "Oswald", sans-serif; font-weight: 700; font-size: 1.05em; color: var(--cream); }
-  .beer .pack { font-family: "Oswald", sans-serif; font-weight: 600; font-size: .8em; color: var(--charcoal); white-space: nowrap; }
+  .beer .pack { font-family: "Oswald", sans-serif; font-weight: 600; font-size: .8em; color: var(--cream); white-space: nowrap; }
   .beer .pack small { font-size: .7em; letter-spacing: .05em; }
   .beer .style {
     text-transform: uppercase;
@@ -82,8 +82,9 @@
     letter-spacing: .06em;
     margin-top: .2em;
   }
-  .beer .abv { font-weight: 800; color: var(--charcoal); white-space: nowrap; }
+  .beer .abv { font-weight: 800; color: var(--cream); white-space: nowrap; }
   .beer .desc { font-size: .6em; margin-top: .2em; opacity: .9; font-style: italic; }
+  .beer .serving { font-size: calc(.62em * .75); font-style: italic; margin-top: .25em; letter-spacing: .03em; }
 
   footer {
     display: flex; align-items: flex-end; justify-content: space-between;
@@ -118,8 +119,8 @@
 
   <div id="status"></div>
 
-<script>window.HGB_BUILD = "20261111-2";</script>
-<script src="menu-data.js?v=20261111-2"></script>
+<script>window.HGB_BUILD = "20261111-3";</script>
+<script src="menu-data.js?v=20261111-3"></script>
 <script>
   const menuEl = document.getElementById("menu");
   const boxEl = document.getElementById("box");
@@ -138,6 +139,7 @@
               ${b.fourPack ? `<div class="pack"><small>4PK</small> ${escapeHTML(b.fourPack)}</div>` : ""}
             </div>
             <div class="style">${escapeHTML(b.style)}${b.style && b.abv ? " &middot; " : ""}${b.abv ? `<span class="abv">${escapeHTML(b.abv)}</span>` : ""}</div>
+            ${b.serving ? `<div class="serving">${escapeHTML(b.serving)}</div>` : ""}
             ${b.description ? `<div class="desc">${escapeHTML(b.description)}</div>` : ""}
           </div>`).join("")}
       </section>`).join("");

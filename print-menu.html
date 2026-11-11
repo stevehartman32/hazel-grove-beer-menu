@@ -98,6 +98,7 @@
   .beer .style { font-size: .66em; text-transform: uppercase; letter-spacing: .06em; margin-top: .15em; }
   .beer .abv { font-weight: 800; color: var(--red); }
   .beer .desc { font-size: .66em; font-style: italic; margin-top: .15em; color: #555; }
+  .beer .serving { font-size: calc(.66em * .75); font-style: italic; margin-top: .2em; letter-spacing: .03em; }
 
   .page footer {
     display: flex; justify-content: space-between; align-items: center;
@@ -148,8 +149,8 @@
     </div>
   </div>
 
-<script>window.HGB_BUILD = "20261111-2";</script>
-<script src="menu-data.js?v=20261111-2"></script>
+<script>window.HGB_BUILD = "20261111-3";</script>
+<script src="menu-data.js?v=20261111-3"></script>
 <script>
   const menuEl = document.getElementById("menu");
   const boxEl = document.getElementById("box");
@@ -180,6 +181,7 @@
               ${b.fourPack ? `<span class="pack"><small>4PK</small> ${escapeHTML(b.fourPack)}</span>` : ""}
             </div>
             <div class="style">${escapeHTML(b.style)}${b.style && b.abv ? " &middot; " : ""}${b.abv ? `<span class="abv">${escapeHTML(b.abv)}</span>` : ""}</div>
+            ${b.serving ? `<div class="serving">${escapeHTML(b.serving)}</div>` : ""}
             ${b.description ? `<div class="desc">${escapeHTML(b.description)}</div>` : ""}
           </div>`).join("")}
       </section>`).join("");

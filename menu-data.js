@@ -74,6 +74,7 @@ function csvToMenu(text) {
     price: col("tapprice", "price", "pint", "pour", "cost"),
     fourPack: col("packprice", "pack", "fourpack", "fourpackprice", "cans"),
     onTap: col("ontap", "active", "show", "available"),
+    serving: col("serving", "servingsize", "glass", "glassware"),
   };
   const get = (r, k) => (idx[k] >= 0 && r[idx[k]] != null ? r[idx[k]].trim() : "");
   const money = v => (v && /^\d/.test(v) ? "$" + v : v);
@@ -101,7 +102,7 @@ function csvToMenu(text) {
     }
     byName[cat].beers.push({
       tapNo: get(r, "tapNo"), name, style: get(r, "style"), abv,
-      description: get(r, "desc"), price: money(get(r, "price")), fourPack: money(get(r, "fourPack")),
+      description: get(r, "desc"), serving: get(r, "serving"), price: money(get(r, "price")), fourPack: money(get(r, "fourPack")),
     });
   }
   return groups;
