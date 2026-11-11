@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>On Tap @ HGB — Taproom Screen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Almarai:wght@400;700;800&family=Oswald:wght@500;600;700&family=Yellowtail&display=swap" rel="stylesheet">
+<style>
+  /* Palette from hazelgrovebrewing.com / brand guide */
+  :root {
+    --sage: #D9DBB2;      /* site background (brand "light green") */
+    --green: #307055;     /* brand green — headings */
+    --charcoal: #2E2B28;  /* brand charcoal — beer names */
+    --cream: #F7EFE2;
+    --red: #E2493E;
+    --yellow: #EFCB69;
+    --scale: 1;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; overflow: hidden; }
+  body {
+    background: var(--sage);
+    color: var(--charcoal);
+    font-family: "Almarai", Helvetica, Arial, sans-serif;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    padding: 2.2vh 3vw 1.6vh;
+    cursor: none;
+  }
+  header { text-align: center; }
+  header h1 {
+    font-family: "Yellowtail", cursive;
+    font-weight: 400;
+    color: var(--green);
+    font-size: 8vh;
+    line-height: 1.1;
+  }
+  header .rule {
+    width: 18vw; height: 0.45vh; margin: 0.6vh auto 0;
+    background: var(--green); border-radius: 1vh; opacity: .55;
+  }
+
+  #box { position: relative; min-height: 0; overflow: hidden; margin-top: 2vh; }
+  #menu {
+    column-count: 3;
+    column-gap: 4vw;
+    column-fill: balance;
+    font-size: calc(2.2vh * var(--scale) * 1.6);
+  }
+  .cat { break-inside: avoid; margin-bottom: 1.1em; }
+  .cat h2 {
+    font-family: "Yellowtail", cursive;
+    font-weight: 400;
+    color: var(--green);
+    font-size: 1.55em;
+    line-height: 1.15;
+    margin-bottom: .25em;
+    border-bottom: .08em solid rgba(48,112,85,.35);
+    padding-bottom: .1em;
+  }
+  .beer { break-inside: avoid; padding: .35em 0 .3em; }
+  .beer .top { display: flex; align-items: baseline; gap: .5em; }
+  .beer .name {
+    font-family: "Oswald", "Arial Narrow", sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-style: italic;
+    letter-spacing: .01em;
+    font-size: 1.12em;
+    line-height: 1.1;
+    flex: 1;
+  }
+  .beer .price { font-family: "Oswald", sans-serif; font-weight: 600; color: var(--green); }
+  .beer .style {
+    text-transform: uppercase;
+    font-size: .62em;
+    letter-spacing: .06em;
+    margin-top: .2em;
+  }
+  .beer .abv { font-weight: 800; color: var(--green); white-space: nowrap; }
+  .beer .desc { font-size: .6em; margin-top: .2em; opacity: .8; font-style: italic; }
+
+  footer {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    gap: 3vw; margin-top: 1vh;
+  }
+  footer .note {
+    font-family: "Oswald", sans-serif; font-weight: 500;
+    text-transform: uppercase; letter-spacing: .08em;
+    font-size: 2.1vh; color: var(--green);
+  }
+  footer .logo { height: 15vh; width: auto; display: block; }
+
+  #status {
+    position: fixed; left: 1vw; top: .8vh; font-size: 1.3vh;
+    color: var(--charcoal); opacity: .45;
+  }
+  #status.err { color: var(--red); opacity: .9; }
+</style>
+</head>
+<body>
+  <header>
+    <h1>On Tap @ HGB</h1>
+    <div class="rule"></div>
+  </header>
+
+  <div id="box"><div id="menu"></div></div>
+
+  <footer>
+    <div class="note">Additional can pours available &mdash; ask your bartender</div>
+    <img class="logo" src="assets/logo-green.svg" alt="Hazel Grove Brewing">
+  </footer>
+
+  <div id="status"></div>
+
+<script src="menu-data.js"></script>
+<script>
+  const menuEl = document.getElementById("menu");
+  const boxEl = document.getElementById("box");
+  const statusEl = document.getElementById("status");
+  let lastHTML = "";
+
+  function render(groups) {
+    return groups.map(g => `
+      <section class="cat">
+        <h2>${escapeHTML(g.name)}</h2>
+        ${g.beers.map(b => `
+          <div class="beer">
+            <div class="top">
+              <div class="name">${escapeHTML(b.name)}</div>
+              ${b.price ? `<div class="price">${escapeHTML(b.price)}</div>` : ""}
+            </div>
+            <div class="style">${escapeHTML(b.style)}${b.style && b.abv ? " &middot; " : ""}${b.abv ? `<span class="abv">${escapeHTML(b.abv)}</span>` : ""}</div>
+            ${b.description ? `<div class="desc">${escapeHTML(b.description)}</div>` : ""}
+          </div>`).join("")}
+      </section>`).join("");
+  }
+
+  function fit() {
+    // Fewer columns when the list is short so it fills the screen nicely
+    const count = menuEl.querySelectorAll(".beer").length;
+    menuEl.style.columnCount = count <= 6 ? 2 : 3;
+    fitToBox(menuEl, boxEl, { min: 30, max: 140 });
+  }
+
+  async function refresh() {
+    const { groups, source, error } = await loadMenu();
+    const html = render(groups);
+    if (html !== lastHTML) { menuEl.innerHTML = html; lastHTML = html; fit(); }
+    const t = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    statusEl.className = error ? "err" : "";
+    statusEl.textContent =
+      source === "sheet" ? "" :
+      source === "cache" ? `Offline — showing last saved menu (${error})` :
+      error ? `Couldn't load Google Sheet: ${error} — showing sample menu` :
+      "Sample menu — connect your Google Sheet in menu-data.js";
+  }
+
+  document.fonts.ready.then(refresh);
+  window.addEventListener("resize", fit);
+  setInterval(refresh, MENU_CONFIG.REFRESH_MINUTES * 60 * 1000);
+</script>
+</body>
+</html>

@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Taproom Menu — Print Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Almarai:wght@400;700;800&family=Oswald:wght@500;600;700&family=Yellowtail&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red: #E2493E;       /* Hazel Grove brand red */
+    --charcoal: #2E2B28;  /* brand charcoal */
+    --paper: #FFFFFF;
+    --desk: #5b5752;
+    --scale: 1;
+    --page-w: 8.5in;
+    --page-h: 11in;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--desk);
+    font-family: "Almarai", Helvetica, Arial, sans-serif;
+    color: var(--charcoal);
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+
+  /* ---------- Toolbar (screen only) ---------- */
+  .toolbar {
+    position: sticky; top: 0; z-index: 5;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
+    padding: 12px 20px; background: var(--charcoal); color: #fff;
+    font-size: 14px;
+  }
+  .toolbar h1 { font-size: 16px; font-weight: 700; margin-right: auto; }
+  .toolbar label { display: flex; align-items: center; gap: 6px; }
+  .toolbar select, .toolbar input[type=text] {
+    font: inherit; padding: 6px 8px; border-radius: 6px; border: 0;
+  }
+  .toolbar input[type=text] { width: 260px; }
+  .toolbar button {
+    font: inherit; font-weight: 700; cursor: pointer;
+    padding: 8px 16px; border-radius: 6px; border: 2px solid var(--red);
+    background: transparent; color: #fff;
+  }
+  .toolbar button.primary { background: var(--red); }
+  .toolbar button:hover { filter: brightness(1.1); }
+  #status { width: 100%; font-size: 12px; opacity: .75; }
+  #status.err { color: #ffb3ad; opacity: 1; }
+
+  /* ---------- Page preview ---------- */
+  .stage { padding: 32px 16px 64px; display: flex; justify-content: center; }
+  .page {
+    width: var(--page-w); height: var(--page-h);
+    background: var(--paper);
+    box-shadow: 0 10px 40px rgba(0,0,0,.45);
+    padding: .45in .55in .4in;
+    display: grid; grid-template-rows: auto 1fr auto;
+    position: relative; overflow: hidden;
+  }
+  .page::before { /* thin red frame */
+    content: ""; position: absolute; inset: .2in;
+    border: 2.5pt solid var(--red); border-radius: 4pt; pointer-events: none;
+  }
+  .page header { text-align: center; position: relative; }
+  .page header img { height: 1.25in; display: block; margin: 0 auto .05in; }
+  .page header .title {
+    font-family: "Yellowtail", cursive; color: var(--red);
+    font-size: 30pt; line-height: 1;
+  }
+  .page header .date {
+    font-family: "Oswald", sans-serif; text-transform: uppercase;
+    letter-spacing: .14em; font-size: 8.5pt; margin-top: .04in;
+  }
+
+  #box { position: relative; min-height: 0; overflow: hidden; margin-top: .18in; }
+  #menu {
+    column-count: 2; column-gap: .45in;
+    column-rule: 1pt dotted rgba(226,73,62,.45);
+    font-size: calc(13pt * var(--scale));
+  }
+  .cat { break-inside: avoid; margin-bottom: .9em; }
+  .cat h2 {
+    font-family: "Yellowtail", cursive; font-weight: 400;
+    color: var(--red); font-size: 1.6em; line-height: 1.1;
+    border-bottom: 1.5pt solid var(--red); padding-bottom: .05em; margin-bottom: .2em;
+  }
+  .beer { break-inside: avoid; padding: .3em 0; }
+  .beer .top { display: flex; align-items: baseline; gap: .4em; }
+  .beer .name {
+    font-family: "Oswald", "Arial Narrow", sans-serif; font-weight: 700;
+    font-style: italic; text-transform: uppercase; font-size: 1.05em; line-height: 1.1;
+  }
+  .beer .dots { flex: 1; border-bottom: 1pt dotted rgba(46,43,40,.35); transform: translateY(-.25em); }
+  .beer .price { font-family: "Oswald", sans-serif; font-weight: 600; color: var(--red); }
+  .beer .style { font-size: .66em; text-transform: uppercase; letter-spacing: .06em; margin-top: .15em; }
+  .beer .abv { font-weight: 800; color: var(--red); }
+  .beer .desc { font-size: .66em; font-style: italic; margin-top: .15em; color: #555; }
+
+  .page footer {
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: "Oswald", sans-serif; text-transform: uppercase;
+    letter-spacing: .1em; font-size: 8pt; color: var(--red);
+    border-top: 1.5pt solid var(--red); padding-top: .07in; margin-top: .08in;
+  }
+
+  /* ---------- Print ---------- */
+  @page { size: letter portrait; margin: 0; }
+  @media print {
+    body { background: #fff; }
+    .toolbar { display: none; }
+    .stage { padding: 0; display: block; }
+    .page { box-shadow: none; margin: 0; page-break-after: avoid; }
+  }
+</style>
+<style id="page-size"></style>
+</head>
+<body>
+  <div class="toolbar">
+    <h1>Hazel Grove — Printed Taproom Menu</h1>
+    <label>Paper
+      <select id="paper">
+        <option value="letter">Letter (8.5 × 11)</option>
+        <option value="legal">Legal (8.5 × 14)</option>
+        <option value="half">Half Letter (5.5 × 8.5)</option>
+      </select>
+    </label>
+    <label>Date line <input type="text" id="dateline"></label>
+    <button id="reload" type="button">Reload from Sheet</button>
+    <button id="print" class="primary" type="button">Print</button>
+    <div id="status"></div>
+  </div>
+
+  <div class="stage">
+    <div class="page" id="page">
+      <header>
+        <img src="assets/logo-red.svg" alt="Hazel Grove Brewing">
+        <div class="title">On Tap</div>
+        <div class="date" id="date"></div>
+      </header>
+      <div id="box"><div id="menu"></div></div>
+      <footer>
+        <span>Additional can pours available</span>
+        <span>hazelgrovebrewing.com</span>
+      </footer>
+    </div>
+  </div>
+
+<script src="menu-data.js"></script>
+<script>
+  const menuEl = document.getElementById("menu");
+  const boxEl = document.getElementById("box");
+  const statusEl = document.getElementById("status");
+  const pageEl = document.getElementById("page");
+  const paperEl = document.getElementById("paper");
+  const datelineEl = document.getElementById("dateline");
+  const dateEl = document.getElementById("date");
+
+  const PAPERS = {
+    letter: { w: "8.5in", h: "11in", css: "letter portrait", cols: 2, logo: "1.25in", base: 13 },
+    legal:  { w: "8.5in", h: "14in", css: "legal portrait",  cols: 2, logo: "1.4in",  base: 14 },
+    half:   { w: "5.5in", h: "8.5in", css: "5.5in 8.5in",    cols: 1, logo: ".85in",  base: 11 },
+  };
+
+  datelineEl.value = new Date().toLocaleDateString([], { month: "long", day: "numeric", year: "numeric" });
+
+  function render(groups) {
+    menuEl.innerHTML = groups.map(g => `
+      <section class="cat">
+        <h2>${escapeHTML(g.name)}</h2>
+        ${g.beers.map(b => `
+          <div class="beer">
+            <div class="top">
+              <span class="name">${escapeHTML(b.name)}</span>
+              ${b.price ? `<span class="dots"></span><span class="price">${escapeHTML(b.price)}</span>` : ""}
+            </div>
+            <div class="style">${escapeHTML(b.style)}${b.style && b.abv ? " &middot; " : ""}${b.abv ? `<span class="abv">${escapeHTML(b.abv)}</span>` : ""}</div>
+            ${b.description ? `<div class="desc">${escapeHTML(b.description)}</div>` : ""}
+          </div>`).join("")}
+      </section>`).join("");
+  }
+
+  function applyPaper() {
+    const p = PAPERS[paperEl.value];
+    pageEl.style.setProperty("--page-w", p.w);
+    pageEl.style.setProperty("--page-h", p.h);
+    pageEl.querySelector("header img").style.height = p.logo;
+    menuEl.style.columnCount = p.cols;
+    menuEl.style.fontSize = `calc(${p.base}pt * var(--scale))`;
+    document.getElementById("page-size").textContent = `@page { size: ${p.css}; margin: 0; }`;
+    dateEl.textContent = datelineEl.value;
+    fitToBox(menuEl, boxEl, { min: 40, max: 130 });
+  }
+
+  async function load() {
+    statusEl.textContent = "Loading…";
+    const { groups, source, error } = await loadMenu();
+    render(groups);
+    statusEl.className = error ? "err" : "";
+    statusEl.textContent =
+      source === "sheet" ? `Loaded from Google Sheet at ${new Date().toLocaleTimeString()}` :
+      source === "cache" ? `Couldn't reach the sheet (${error}) — showing last saved menu` :
+      error ? `Couldn't load Google Sheet: ${error} — showing sample menu` :
+      "Showing sample menu — connect your Google Sheet in menu-data.js";
+    applyPaper();
+  }
+
+  paperEl.addEventListener("change", applyPaper);
+  datelineEl.addEventListener("input", applyPaper);
+  document.getElementById("reload").addEventListener("click", load);
+  document.getElementById("print").addEventListener("click", () => window.print());
+  document.fonts.ready.then(load);
+</script>
+</body>
+</html>
