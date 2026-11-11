@@ -122,10 +122,10 @@
   </footer>
 
   <div id="status"></div>
-  <div id="hgb-ball" aria-hidden="true"><span><img src="assets/monogram-light-green.svg" alt=""></span></div>
+  <div id="hgb-ball" aria-hidden="true"><span><img src="assets/monogram-yellow.svg" alt=""></span></div>
 
-<script>window.HGB_BUILD = "20261111-7";</script>
-<script src="menu-data.js?v=20261111-7"></script>
+<script>window.HGB_BUILD = "20261111-8";</script>
+<script src="menu-data.js?v=20261111-8"></script>
 <script>
   const menuEl = document.getElementById("menu");
   const boxEl = document.getElementById("box");
@@ -186,8 +186,8 @@
     menuEl.querySelectorAll(".beer").forEach(b => { lowest = Math.max(lowest, b.getBoundingClientRect().bottom); });
     const floor = innerHeight - 1.5 * vh;              // where it lands
     const lane = floor - (lowest + 1.5 * vh);           // free space under the lowest beer
-    const size = Math.max(4 * vh, Math.min(9 * vh, lane * 0.55));
-    const height = Math.max(0, Math.min(lane - size, 14 * vh));
+    const size = Math.max(6 * vh, Math.min(13.5 * vh, lane * 0.8));   // 50% larger than first version
+    const height = Math.max(2 * vh, Math.min(lane - size, 14 * vh));
     ball.style.width = ball.style.height = size + "px";
     ball.style.top = (floor - size) + "px";
     ball.style.visibility = "visible";
