@@ -3,9 +3,10 @@
    -------------------------------------------------------------------------
    HOW TO CONNECT YOUR GOOGLE SHEET
    1. Make a Google Sheet with these column headers in row 1 (any order):
-        Category | Name | Style | ABV | Description | Price | On Tap
-      - "On Tap": Y / N (leave blank = Y). Rows marked N are hidden.
-      - Categories show in the order they first appear in the sheet.
+        Tap Number | Name | Style | Category | ABV | Tap Price | 4 Pack Price
+      - Only beers WITH a Tap Number are shown; clear it to take a beer off.
+      - Beers are listed in tap-number order, grouped by Category.
+      - Optional extra columns: Description, On Tap (Y/N).
    2. In the sheet: Share > General access > "Anyone with the link" > Viewer.
    3. Paste the sheet's ID (the long string between /d/ and /edit in the
       sheet's URL) into SHEET_ID below. Set SHEET_TAB to the tab name.
@@ -14,7 +15,7 @@
    ========================================================================= */
 
 const MENU_CONFIG = {
-  SHEET_ID: "",          // e.g. "1AbCdEfGh...xyz"
+  SHEET_ID: "1ulGBXtQC_BUiiKs6znCTZwm6Yhr_m-FY8YI51xGQZa4",
   SHEET_TAB: "Menu",     // the tab (worksheet) name
   REFRESH_MINUTES: 2,    // taproom screen re-checks the sheet this often
 };
@@ -64,18 +65,28 @@ function csvToMenu(text) {
   const header = rows[0].map(h => h.trim().toLowerCase().replace(/[^a-z]/g, ""));
   const col = (...names) => header.findIndex(h => names.includes(h));
   const idx = {
+    tapNo: col("tapnumber", "tap", "tapno", "tapnum", "line", "handle"),
     category: col("category", "section", "group"),
     name: col("name", "beer", "beername"),
     style: col("style", "type"),
     abv: col("abv", "alcohol"),
     desc: col("description", "desc", "notes"),
-    price: col("price", "cost"),
+    price: col("tapprice", "price", "pint", "pour", "cost"),
+    fourPack: col("packprice", "pack", "fourpack", "fourpackprice", "cans"),
     onTap: col("ontap", "active", "show", "available"),
   };
   const get = (r, k) => (idx[k] >= 0 && r[idx[k]] != null ? r[idx[k]].trim() : "");
+  const money = v => (v && /^\d/.test(v) ? "$" + v : v);
+  let body = rows.slice(1);
+  if (idx.tapNo >= 0) {
+    // Only beers with a tap number, in tap order
+    body = body.filter(r => get(r, "tapNo") !== "");
+    const num = r => { const n = parseFloat(get(r, "tapNo")); return isNaN(n) ? Infinity : n; };
+    body = body.map((r, i) => [r, i]).sort((a, b) => num(a[0]) - num(b[0]) || a[1] - b[1]).map(x => x[0]);
+  }
   const groups = [];
   const byName = {};
-  for (const r of rows.slice(1)) {
+  for (const r of body) {
     const name = get(r, "name");
     if (!name) continue;
     const tap = get(r, "onTap").toLowerCase();
@@ -88,10 +99,9 @@ function csvToMenu(text) {
       // Sheets may export a %-formatted cell as 0.062
       abv = isNaN(n) ? abv : (n < 1 ? +(n * 100).toFixed(1) : n) + "%";
     }
-    let price = get(r, "price");
-    if (price && /^\d/.test(price)) price = "$" + price;
     byName[cat].beers.push({
-      name, style: get(r, "style"), abv, description: get(r, "desc"), price,
+      tapNo: get(r, "tapNo"), name, style: get(r, "style"), abv,
+      description: get(r, "desc"), price: money(get(r, "price")), fourPack: money(get(r, "fourPack")),
     });
   }
   return groups;
@@ -123,7 +133,8 @@ async function loadMenu() {
     let cached = null;
     try { cached = localStorage.getItem("hgb-menu-cache"); } catch (e) {}
     if (cached) return { groups: csvToMenu(cached), source: "cache", error: err.message };
-    return { groups: csvToMenu(SAMPLE_MENU_CSV), source: "sample", error: err.message };
+    // Never show made-up beers in the taproom when a real sheet is configured
+    return { groups: [], source: "none", error: err.message };
   }
 }
 

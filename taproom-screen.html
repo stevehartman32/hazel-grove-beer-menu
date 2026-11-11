@@ -72,7 +72,19 @@
     line-height: 1.1;
     flex: 1;
   }
-  .beer .price { font-family: "Oswald", sans-serif; font-weight: 700; color: var(--charcoal); }
+  .beer .tapno {
+    flex: none; align-self: flex-start; margin-top: .3em;
+    width: 1.5em; height: 1.5em; border-radius: 50%;
+    display: grid; place-items: center;
+    background: var(--cream); color: var(--red);
+    font-family: "Oswald", sans-serif; font-weight: 700; font-size: .75em;
+  }
+  /* indent style line to sit under the name, past the tap-number badge */
+  .beer.has-tap .style { padding-left: 2.62em; }
+  .beer.has-tap .desc { padding-left: 2.71em; }
+  .beer .price { font-family: "Oswald", sans-serif; font-weight: 700; font-size: 1.05em; color: var(--cream); }
+  .beer .pack { font-family: "Oswald", sans-serif; font-weight: 600; font-size: .8em; color: var(--charcoal); white-space: nowrap; }
+  .beer .pack small { font-size: .7em; letter-spacing: .05em; }
   .beer .style {
     text-transform: uppercase;
     font-size: .62em;
@@ -127,10 +139,12 @@
       <section class="cat">
         <h2>${escapeHTML(g.name)}</h2>
         ${g.beers.map(b => `
-          <div class="beer">
+          <div class="beer${b.tapNo ? " has-tap" : ""}">
             <div class="top">
+              ${b.tapNo ? `<div class="tapno">${escapeHTML(b.tapNo)}</div>` : ""}
               <div class="name">${escapeHTML(b.name)}</div>
               ${b.price ? `<div class="price">${escapeHTML(b.price)}</div>` : ""}
+              ${b.fourPack ? `<div class="pack"><small>4PK</small> ${escapeHTML(b.fourPack)}</div>` : ""}
             </div>
             <div class="style">${escapeHTML(b.style)}${b.style && b.abv ? " &middot; " : ""}${b.abv ? `<span class="abv">${escapeHTML(b.abv)}</span>` : ""}</div>
             ${b.description ? `<div class="desc">${escapeHTML(b.description)}</div>` : ""}
@@ -154,6 +168,7 @@
     statusEl.textContent =
       source === "sheet" ? "" :
       source === "cache" ? `Offline — showing last saved menu (${error})` :
+      source === "none" ? `Can't reach the menu sheet: ${error}` :
       error ? `Couldn't load Google Sheet: ${error} — showing sample menu` :
       "Sample menu — connect your Google Sheet in menu-data.js";
   }

@@ -92,7 +92,16 @@
     font-style: italic; text-transform: uppercase; font-size: 1.05em; line-height: 1.1;
   }
   .beer .dots { flex: 1; border-bottom: 1pt dotted rgba(46,43,40,.35); transform: translateY(-.25em); }
-  .beer .price { font-family: "Oswald", sans-serif; font-weight: 600; color: var(--red); }
+  .beer .tapno {
+    flex: none; align-self: flex-start; margin-top: .25em; width: 1.45em; height: 1.45em; border-radius: 50%;
+    display: grid; place-items: center; background: var(--red); color: #fff;
+    font-family: "Oswald", sans-serif; font-weight: 700; font-size: .72em;
+  }
+  .beer.has-tap .style { padding-left: 2.6em; }
+  .beer.has-tap .desc { padding-left: 2.6em; }
+  .beer .price { font-family: "Oswald", sans-serif; font-weight: 700; color: var(--red); }
+  .beer .pack { font-family: "Oswald", sans-serif; font-weight: 600; font-size: .85em; white-space: nowrap; }
+  .beer .pack small { font-size: .7em; letter-spacing: .05em; }
   .beer .style { font-size: .66em; text-transform: uppercase; letter-spacing: .06em; margin-top: .15em; }
   .beer .abv { font-weight: 800; color: var(--red); }
   .beer .desc { font-size: .66em; font-style: italic; margin-top: .15em; color: #555; }
@@ -169,10 +178,13 @@
       <section class="cat">
         <h2>${escapeHTML(g.name)}</h2>
         ${g.beers.map(b => `
-          <div class="beer">
+          <div class="beer${b.tapNo ? " has-tap" : ""}">
             <div class="top">
+              ${b.tapNo ? `<span class="tapno">${escapeHTML(b.tapNo)}</span>` : ""}
               <span class="name">${escapeHTML(b.name)}</span>
-              ${b.price ? `<span class="dots"></span><span class="price">${escapeHTML(b.price)}</span>` : ""}
+              ${b.price || b.fourPack ? `<span class="dots"></span>` : ""}
+              ${b.price ? `<span class="price">${escapeHTML(b.price)}</span>` : ""}
+              ${b.fourPack ? `<span class="pack"><small>4PK</small> ${escapeHTML(b.fourPack)}</span>` : ""}
             </div>
             <div class="style">${escapeHTML(b.style)}${b.style && b.abv ? " &middot; " : ""}${b.abv ? `<span class="abv">${escapeHTML(b.abv)}</span>` : ""}</div>
             ${b.description ? `<div class="desc">${escapeHTML(b.description)}</div>` : ""}
@@ -200,6 +212,7 @@
     statusEl.textContent =
       source === "sheet" ? `Loaded from Google Sheet at ${new Date().toLocaleTimeString()}` :
       source === "cache" ? `Couldn't reach the sheet (${error}) — showing last saved menu` :
+      source === "none" ? `Couldn't load the menu sheet: ${error}` :
       error ? `Couldn't load Google Sheet: ${error} — showing sample menu` :
       "Showing sample menu — connect your Google Sheet in menu-data.js";
     applyPaper();
