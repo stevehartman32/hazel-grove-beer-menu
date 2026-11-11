@@ -138,6 +138,26 @@ async function loadMenu() {
   }
 }
 
+/* GitHub Pages lets browsers cache pages for ~10 minutes. Each page carries
+   a build stamp (window.HGB_BUILD); this re-downloads the page uncached and,
+   if the live stamp is newer, reloads at a fresh URL so the update shows.
+   Returns true if a reload was started. */
+async function reloadIfNewVersion() {
+  try {
+    const res = await fetch(location.pathname + "?check=" + Date.now(), { cache: "no-store" });
+    if (!res.ok) return false;
+    const m = (await res.text()).match(/HGB_BUILD\s*=\s*"([^"]+)"/);
+    if (m && window.HGB_BUILD && m[1] !== window.HGB_BUILD) {
+      const p = new URLSearchParams(location.search);
+      if (p.get("v") === m[1]) return false; // already tried this version; avoid a reload loop
+      p.set("v", m[1]);
+      location.replace(location.pathname + "?" + p.toString());
+      return true;
+    }
+  } catch (e) {}
+  return false;
+}
+
 function escapeHTML(s) {
   return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }

@@ -127,7 +127,8 @@
 
   <div id="status"></div>
 
-<script src="menu-data.js"></script>
+<script>window.HGB_BUILD = "20261111-1";</script>
+<script src="menu-data.js?v=20261111-1"></script>
 <script>
   const menuEl = document.getElementById("menu");
   const boxEl = document.getElementById("box");
@@ -160,6 +161,7 @@
   }
 
   async function refresh() {
+    if (await reloadIfNewVersion()) return;
     const { groups, source, error } = await loadMenu();
     const html = render(groups);
     if (html !== lastHTML) { menuEl.innerHTML = html; lastHTML = html; fit(); }

@@ -155,7 +155,8 @@
     </div>
   </div>
 
-<script src="menu-data.js"></script>
+<script>window.HGB_BUILD = "20261111-1";</script>
+<script src="menu-data.js?v=20261111-1"></script>
 <script>
   const menuEl = document.getElementById("menu");
   const boxEl = document.getElementById("box");
@@ -222,7 +223,7 @@
   datelineEl.addEventListener("input", applyPaper);
   document.getElementById("reload").addEventListener("click", load);
   document.getElementById("print").addEventListener("click", () => window.print());
-  document.fonts.ready.then(load);
+  reloadIfNewVersion().then(reloading => { if (!reloading) document.fonts.ready.then(load); });
 </script>
 </body>
 </html>
