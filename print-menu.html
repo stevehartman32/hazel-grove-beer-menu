@@ -92,13 +92,6 @@
     font-style: italic; text-transform: uppercase; font-size: 1.05em; line-height: 1.1;
   }
   .beer .dots { flex: 1; border-bottom: 1pt dotted rgba(46,43,40,.35); transform: translateY(-.25em); }
-  .beer .tapno {
-    flex: none; align-self: flex-start; margin-top: .25em; width: 1.45em; height: 1.45em; border-radius: 50%;
-    display: grid; place-items: center; background: var(--red); color: #fff;
-    font-family: "Oswald", sans-serif; font-weight: 700; font-size: .72em;
-  }
-  .beer.has-tap .style { padding-left: 2.6em; }
-  .beer.has-tap .desc { padding-left: 2.6em; }
   .beer .price { font-family: "Oswald", sans-serif; font-weight: 700; color: var(--red); }
   .beer .pack { font-family: "Oswald", sans-serif; font-weight: 600; font-size: .85em; white-space: nowrap; }
   .beer .pack small { font-size: .7em; letter-spacing: .05em; }
@@ -155,8 +148,8 @@
     </div>
   </div>
 
-<script>window.HGB_BUILD = "20261111-1";</script>
-<script src="menu-data.js?v=20261111-1"></script>
+<script>window.HGB_BUILD = "20261111-2";</script>
+<script src="menu-data.js?v=20261111-2"></script>
 <script>
   const menuEl = document.getElementById("menu");
   const boxEl = document.getElementById("box");
@@ -179,9 +172,8 @@
       <section class="cat">
         <h2>${escapeHTML(g.name)}</h2>
         ${g.beers.map(b => `
-          <div class="beer${b.tapNo ? " has-tap" : ""}">
+          <div class="beer">
             <div class="top">
-              ${b.tapNo ? `<span class="tapno">${escapeHTML(b.tapNo)}</span>` : ""}
               <span class="name">${escapeHTML(b.name)}</span>
               ${b.price || b.fourPack ? `<span class="dots"></span>` : ""}
               ${b.price ? `<span class="price">${escapeHTML(b.price)}</span>` : ""}
