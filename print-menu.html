@@ -63,7 +63,7 @@
     border: 2.5pt solid var(--red); border-radius: 4pt; pointer-events: none;
   }
   .page header { text-align: center; position: relative; }
-  .page header img { height: 1.25in; display: block; margin: 0 auto .05in; }
+  .page header img { height: .8in; display: block; margin: 0 auto .05in; }
   .page header .title {
     font-family: "Yellowtail", cursive; color: var(--red);
     font-size: 30pt; line-height: 1;
@@ -137,7 +137,7 @@
   <div class="stage">
     <div class="page" id="page">
       <header>
-        <img src="assets/logo-red.svg" alt="Hazel Grove Brewing">
+        <img src="assets/logo-horizontal-red.svg" alt="Hazel Grove Brewing">
         <div class="title">On Tap</div>
         <div class="date" id="date"></div>
       </header>
@@ -149,8 +149,8 @@
     </div>
   </div>
 
-<script>window.HGB_BUILD = "20261111-4";</script>
-<script src="menu-data.js?v=20261111-4"></script>
+<script>window.HGB_BUILD = "20261111-5";</script>
+<script src="menu-data.js?v=20261111-5"></script>
 <script>
   const menuEl = document.getElementById("menu");
   const boxEl = document.getElementById("box");
@@ -161,9 +161,9 @@
   const dateEl = document.getElementById("date");
 
   const PAPERS = {
-    letter: { w: "8.5in", h: "11in", css: "letter portrait", cols: 2, logo: "1.25in", base: 13 },
-    legal:  { w: "8.5in", h: "14in", css: "legal portrait",  cols: 2, logo: "1.4in",  base: 14 },
-    half:   { w: "5.5in", h: "8.5in", css: "5.5in 8.5in",    cols: 1, logo: ".85in",  base: 11 },
+    letter: { w: "8.5in", h: "11in", css: "letter portrait", cols: 2, logo: ".8in", base: 13 },
+    legal:  { w: "8.5in", h: "14in", css: "legal portrait",  cols: 2, logo: ".9in",   base: 14 },
+    half:   { w: "5.5in", h: "8.5in", css: "5.5in 8.5in",    cols: 1, logo: ".55in",  base: 11 },
   };
 
   datelineEl.value = new Date().toLocaleDateString([], { month: "long", day: "numeric", year: "numeric" });
