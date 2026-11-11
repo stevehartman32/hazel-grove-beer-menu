@@ -12,12 +12,12 @@ Files
 
 Connect the Google Sheet
   1. Google Sheets > File > Import > upload beer-menu-template.csv (or type the headers):
-       Category | Name | Style | ABV | Description | Price | On Tap
+       Tap Number | Name | Style | Category | ABV | Tap Price | 4 Pack Price
   2. Name the tab "Menu" (or change SHEET_TAB in menu-data.js).
   3. Share > General access > "Anyone with the link" > Viewer.
   4. Copy the ID from the sheet URL:  docs.google.com/spreadsheets/d/<THIS PART>/edit
      and paste it into SHEET_ID in menu-data.js.
-  Set "On Tap" to N to hide a beer without deleting it. Price and Description are optional.
+  Only beers with a Tap Number are shown (in tap order). Clear the tap number to take one off.
   Categories appear in the order they first show up in the sheet.
 
 Running it
