@@ -105,7 +105,16 @@
 
   /* VW bug drive-by: hidden and idle except during its run */
   #bug { position: fixed; left: 0; top: 0; pointer-events: none; visibility: hidden; z-index: 5; }
-  #bug img { display: block; width: 100%; height: 100%; transform-origin: 50% 100%; }
+  #bug .car { position: absolute; inset: 0; transform-origin: 50% 100%; }
+  #bug .body { display: block; width: 100%; height: 100%; }
+  /* rim rings cut from the same art; they spin while the hubcap chrome stays put */
+  #bug .rim { position: absolute; top: 67.83%; width: 12.301%; height: 25%; }
+  #bug .rim.rear { left: 15.962%; }
+  #bug .rim.front { left: 76.23%; }
+  #bug .shadow {
+    position: absolute; left: 4%; right: 4%; bottom: -2.5%; height: 7%;
+    background: radial-gradient(closest-side, rgba(0,0,0,.55), rgba(0,0,0,0));
+  }
 </style>
 </head>
 <body>
@@ -122,10 +131,17 @@
   </footer>
 
   <div id="status"></div>
-  <div id="bug" aria-hidden="true"><img src="assets/vw-bug.webp" alt=""></div>
+  <div id="bug" aria-hidden="true">
+    <div class="shadow"></div>
+    <div class="car">
+      <img class="body" src="assets/vw-bug.webp" alt="">
+      <img class="rim rear" src="assets/wheel-rear.webp" alt="">
+      <img class="rim front" src="assets/wheel-front.webp" alt="">
+    </div>
+  </div>
 
-<script>window.HGB_BUILD = "20261114-1";</script>
-<script src="menu-data.js?v=20261114-1"></script>
+<script>window.HGB_BUILD = "20261114-2";</script>
+<script src="menu-data.js?v=20261114-2"></script>
 <script>
   const menuEl = document.getElementById("menu");
   const boxEl = document.getElementById("box");
@@ -177,8 +193,10 @@
      Animations are transform-only (GPU-composited). Add ?bounce=test to the
      URL to see it every 20 seconds. */
   const bug = document.getElementById("bug");
-  const bugImg = bug.firstElementChild;
+  const car = bug.querySelector(".car");
+  const rims = bug.querySelectorAll(".rim");
   const BUG_RATIO = 800 / 394;                          // width / height of vw-bug.webp
+  const TIRE_RADIUS = 158 / 1756;                       // tire radius as a share of car width
   function driveBug() {
     if (document.hidden || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const vh = innerHeight / 100;
@@ -194,18 +212,26 @@
     bug.style.visibility = "visible";
 
     const duration = 14000;
+    const distance = innerWidth + w;
     const drive = bug.animate([{ transform: `translateX(${-w}px)` }, { transform: `translateX(${innerWidth}px)` }],
                               { duration, easing: "linear" });
+    // wheels turn exactly as far as the car travels, so they roll instead of skid
+    const turns = distance / (TIRE_RADIUS * w) * 180 / Math.PI;
+    rims.forEach(r => r.animate([{ transform: "rotate(0deg)" }, { transform: `rotate(${turns}deg)` }],
+                                { duration, easing: "linear" }));
     // a little suspension bounce while it drives
     const b = h * 0.012;
-    bugImg.animate([
+    car.animate([
       { transform: "translateY(0) rotate(0deg)" },
       { transform: `translateY(${-b}px) rotate(-0.4deg)` },
       { transform: "translateY(0) rotate(0deg)" },
       { transform: `translateY(${-b * 0.6}px) rotate(0.3deg)` },
       { transform: "translateY(0) rotate(0deg)" },
     ], { duration: 900, iterations: Math.ceil(duration / 900), easing: "ease-in-out" });
-    drive.onfinish = () => { bug.style.visibility = "hidden"; bugImg.getAnimations().forEach(a => a.cancel()); };
+    drive.onfinish = () => {
+      bug.style.visibility = "hidden";
+      bug.getAnimations({ subtree: true }).forEach(a => a.cancel());
+    };
   }
   const driveEvery = new URLSearchParams(location.search).get("bounce") === "test" ? 20000 : 120000;
   setInterval(driveBug, driveEvery);
