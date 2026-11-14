@@ -111,6 +111,8 @@
   #bug .rim { position: absolute; top: 67.83%; width: 12.301%; height: 25%; }
   #bug .rim.rear { left: 15.962%; }
   #bug .rim.front { left: 76.23%; }
+  /* HGB badge on the driver's door (brand green on the cream door panel) */
+  #bug .badge { position: absolute; left: 50.6%; top: 53%; width: 10.4%; height: auto; }
   #bug .shadow {
     position: absolute; left: 4%; right: 4%; bottom: -2.5%; height: 7%;
     background: radial-gradient(closest-side, rgba(0,0,0,.55), rgba(0,0,0,0));
@@ -135,13 +137,14 @@
     <div class="shadow"></div>
     <div class="car">
       <img class="body" src="assets/vw-bug.webp" alt="">
+      <img class="badge" src="assets/badge-door-green.svg" alt="">
       <img class="rim rear" src="assets/wheel-rear.webp" alt="">
       <img class="rim front" src="assets/wheel-front.webp" alt="">
     </div>
   </div>
 
-<script>window.HGB_BUILD = "20261114-2";</script>
-<script src="menu-data.js?v=20261114-2"></script>
+<script>window.HGB_BUILD = "20261114-3";</script>
+<script src="menu-data.js?v=20261114-3"></script>
 <script>
   const menuEl = document.getElementById("menu");
   const boxEl = document.getElementById("box");
