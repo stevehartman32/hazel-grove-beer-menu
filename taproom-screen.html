@@ -103,9 +103,9 @@
   }
   #status.err { color: var(--yellow); opacity: 1; }
 
-  /* Bouncing HGB monogram: hidden and idle except during its run */
-  #hgb-ball { position: fixed; left: 0; top: 0; pointer-events: none; visibility: hidden; z-index: 5; }
-  #hgb-ball span, #hgb-ball img { display: block; width: 100%; height: 100%; }
+  /* VW bug drive-by: hidden and idle except during its run */
+  #bug { position: fixed; left: 0; top: 0; pointer-events: none; visibility: hidden; z-index: 5; }
+  #bug img { display: block; width: 100%; height: 100%; transform-origin: 50% 100%; }
 </style>
 </head>
 <body>
@@ -122,10 +122,10 @@
   </footer>
 
   <div id="status"></div>
-  <div id="hgb-ball" aria-hidden="true"><span><img src="assets/monogram-yellow.svg" alt=""></span></div>
+  <div id="bug" aria-hidden="true"><img src="assets/vw-bug.webp" alt=""></div>
 
-<script>window.HGB_BUILD = "20261111-8";</script>
-<script src="menu-data.js?v=20261111-8"></script>
+<script>window.HGB_BUILD = "20261114-1";</script>
+<script src="menu-data.js?v=20261114-1"></script>
 <script>
   const menuEl = document.getElementById("menu");
   const boxEl = document.getElementById("box");
@@ -172,42 +172,43 @@
       "Sample menu — connect your Google Sheet in menu-data.js";
   }
 
-  /* HGB monogram bounces left-to-right below the lowest beer. It runs ~10s,
-     then sits hidden until the next run, so the screen is idle in between.
+  /* VW bug drives left-to-right below the lowest beer every 2 minutes. It runs
+     ~14s, then sits hidden until the next run, so the screen is idle in between.
      Animations are transform-only (GPU-composited). Add ?bounce=test to the
-     URL to see it every 15 seconds. */
-  const ball = document.getElementById("hgb-ball");
-  const hop = ball.firstElementChild;
-  const spin = hop.firstElementChild;
-  function bounceLogo() {
+     URL to see it every 20 seconds. */
+  const bug = document.getElementById("bug");
+  const bugImg = bug.firstElementChild;
+  const BUG_RATIO = 800 / 394;                          // width / height of vw-bug.webp
+  function driveBug() {
     if (document.hidden || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const vh = innerHeight / 100;
     let lowest = 0;
     menuEl.querySelectorAll(".beer").forEach(b => { lowest = Math.max(lowest, b.getBoundingClientRect().bottom); });
-    const floor = innerHeight - 1.5 * vh;              // where it lands
-    const lane = floor - (lowest + 1.5 * vh);           // free space under the lowest beer
-    const size = Math.max(6 * vh, Math.min(13.5 * vh, lane * 0.8));   // 50% larger than first version
-    const height = Math.max(2 * vh, Math.min(lane - size, 14 * vh));
-    ball.style.width = ball.style.height = size + "px";
-    ball.style.top = (floor - size) + "px";
-    ball.style.visibility = "visible";
+    const road = innerHeight - 1.2 * vh;                // where the tires sit
+    const lane = road - (lowest + 1.2 * vh);            // free space under the lowest beer
+    const h = Math.max(6 * vh, Math.min(16 * vh, lane));
+    const w = h * BUG_RATIO;
+    bug.style.width = w + "px";
+    bug.style.height = h + "px";
+    bug.style.top = (road - h) + "px";
+    bug.style.visibility = "visible";
 
-    const duration = 10000, hops = 5, frames = [];
-    for (let i = 0; i <= hops * 2; i++) {
-      const up = i % 2 === 1;
-      const decay = 1 - (i / (hops * 2)) * 0.45;        // each hop a little lower
-      frames.push({ offset: i / (hops * 2), transform: `translateY(${up ? -height * decay : 0}px)`,
-                    easing: up ? "ease-in" : "ease-out" });
-    }
-    const roll = (innerWidth + size) / (Math.PI * size) * 360;
-    const move = ball.animate([{ transform: `translateX(${-size}px)` }, { transform: `translateX(${innerWidth}px)` }],
+    const duration = 14000;
+    const drive = bug.animate([{ transform: `translateX(${-w}px)` }, { transform: `translateX(${innerWidth}px)` }],
                               { duration, easing: "linear" });
-    hop.animate(frames, { duration });
-    spin.animate([{ transform: "rotate(0deg)" }, { transform: `rotate(${roll}deg)` }], { duration, easing: "linear" });
-    move.onfinish = () => { ball.style.visibility = "hidden"; };
+    // a little suspension bounce while it drives
+    const b = h * 0.012;
+    bugImg.animate([
+      { transform: "translateY(0) rotate(0deg)" },
+      { transform: `translateY(${-b}px) rotate(-0.4deg)` },
+      { transform: "translateY(0) rotate(0deg)" },
+      { transform: `translateY(${-b * 0.6}px) rotate(0.3deg)` },
+      { transform: "translateY(0) rotate(0deg)" },
+    ], { duration: 900, iterations: Math.ceil(duration / 900), easing: "ease-in-out" });
+    drive.onfinish = () => { bug.style.visibility = "hidden"; bugImg.getAnimations().forEach(a => a.cancel()); };
   }
-  const bounceEvery = new URLSearchParams(location.search).get("bounce") === "test" ? 15000 : 120000;
-  setInterval(bounceLogo, bounceEvery);
+  const driveEvery = new URLSearchParams(location.search).get("bounce") === "test" ? 20000 : 120000;
+  setInterval(driveBug, driveEvery);
 
   document.fonts.ready.then(refresh);
   window.addEventListener("resize", fit);
