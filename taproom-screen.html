@@ -104,7 +104,9 @@
   #status.err { color: var(--yellow); opacity: 1; }
 
   /* VW bug drive-by: hidden and idle except during its run */
-  #bug { position: fixed; left: 0; top: 0; pointer-events: none; visibility: hidden; z-index: 5; }
+  #bug { position: fixed; left: 0; top: 0; pointer-events: none; visibility: hidden; z-index: 11; }
+  .puff { position: fixed; z-index: 12; pointer-events: none; border-radius: 50%;
+    background: radial-gradient(closest-side, rgba(225,221,212,.9), rgba(225,221,212,.45) 55%, rgba(225,221,212,0)); }
   #bug .car { position: absolute; inset: 0; transform-origin: 50% 100%; }
   #bug .body { display: block; width: 100%; height: 100%; }
   /* rim rings cut from the same art; they spin while the hubcap chrome stays put */
@@ -113,6 +115,7 @@
   #bug .rim.front { left: 76.23%; }
   /* HGB badge on the driver's door (brand green on the cream door panel) */
   #bug .badge { position: absolute; left: 50.6%; top: 53%; width: 10.4%; height: auto; }
+  #bug.facing-left .badge { transform: scaleX(-1); }   /* keep the badge readable when the car is mirrored */
   /* Community sign-up screen: fades in over the menu for 30s every 4 minutes */
   #promo {
     position: fixed; inset: 0; z-index: 10;
@@ -207,8 +210,8 @@
     </div>
   </div>
 
-<script>window.HGB_BUILD = "20261123-1";</script>
-<script src="menu-data.js?v=20261123-1"></script>
+<script>window.HGB_BUILD = "20261123-2";</script>
+<script src="menu-data.js?v=20261123-2"></script>
 <script>
   const menuEl = document.getElementById("menu");
   const boxEl = document.getElementById("box");
@@ -255,70 +258,138 @@
       "Sample menu — connect your Google Sheet in menu-data.js";
   }
 
-  /* VW bug drives left-to-right below the lowest beer every 2 minutes. It runs
-     ~14s, then sits hidden until the next run, so the screen is idle in between.
-     Animations are transform-only (GPU-composited). Add ?bounce=test to the
-     URL to see it every 20 seconds. */
+  /* VW bug. Every 2 minutes it drives left-to-right below the lowest beer
+     (~14s). During the sign-up screen it comes back the other way: 10s in it
+     drives right-to-left, slows to a stop mid-screen, pauses, then pulls away
+     with a puff of exhaust. Between runs it is hidden and idle. Animations are
+     transform/opacity only (GPU-composited). ?bounce=test = every 20 seconds. */
   const bug = document.getElementById("bug");
   const car = bug.querySelector(".car");
   const rims = bug.querySelectorAll(".rim");
   const BUG_RATIO = 800 / 394;                          // width / height of vw-bug.webp
   const TIRE_RADIUS = 158 / 1756;                       // tire radius as a share of car width
-  function driveBug(then) {
-    if (document.hidden) return;
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches) { if (then) then(); return; }
+  const EXHAUST = { x: 27 / 800, y: 333 / 394 };        // tailpipe tip on the art
+  const canAnimate = () => !document.hidden && !matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  let bugBusy = false, rimAngle = 0;
+
+  function placeBug(h, road) {
+    const w = h * BUG_RATIO;
+    bug.style.width = w + "px";
+    bug.style.height = h + "px";
+    bug.style.top = (road - h) + "px";
+    bug.style.visibility = "visible";
+    rimAngle = 0;
+    return w;
+  }
+  function parkBug() {
+    bug.style.visibility = "hidden";
+    bug.classList.remove("facing-left");
+    bug.getAnimations({ subtree: true }).forEach(a => a.cancel());
+    bugBusy = false;
+  }
+  // a little suspension bounce while it drives
+  function bounce(h) {
+    const b = h * 0.012;
+    return car.animate([
+      { transform: "translateY(0) rotate(0deg)" },
+      { transform: `translateY(${-b}px) rotate(-0.4deg)` },
+      { transform: "translateY(0) rotate(0deg)" },
+      { transform: `translateY(${-b * 0.6}px) rotate(0.3deg)` },
+      { transform: "translateY(0) rotate(0deg)" },
+    ], { duration: 900, iterations: Infinity, easing: "ease-in-out" });
+  }
+  // Move from one x to another; wheels turn exactly as far as the car travels
+  // (same easing), so they roll instead of skid. flip = facing left.
+  function roll(fromX, toX, ms, easing, flip) {
+    const w = parseFloat(bug.style.width), f = flip ? " scaleX(-1)" : "";
+    bug.classList.toggle("facing-left", !!flip);
+    const move = bug.animate([{ transform: `translateX(${fromX}px)${f}` }, { transform: `translateX(${toX}px)${f}` }],
+                             { duration: ms, easing, fill: "forwards" });
+    const end = rimAngle + Math.abs(toX - fromX) / (TIRE_RADIUS * w) * 180 / Math.PI;
+    rims.forEach(r => r.animate([{ transform: `rotate(${rimAngle}deg)` }, { transform: `rotate(${end}deg)` }],
+                                { duration: ms, easing, fill: "forwards" }));
+    rimAngle = end;
+    return move.finished;
+  }
+  // small puff of smoke from the tailpipe, drifting back and up as it fades
+  function puff(x, y, h, dir) {
+    const size = h * 0.2;
+    [0, 140, 280, 420].forEach((delay, i) => {
+      const p = document.createElement("div");
+      p.className = "puff";
+      p.style.cssText = `left:${x - size / 2}px;top:${y - size / 2}px;width:${size}px;height:${size}px`;
+      document.body.appendChild(p);
+      const dx = dir * size * (1.2 + i * 0.35), dy = size * (0.5 + i * 0.25);
+      p.animate([
+        { transform: "translate(0,0) scale(.3)", opacity: .85 },
+        { transform: `translate(${dx * .5}px,${-dy * .4}px) scale(1.3)`, opacity: .6, offset: .35 },
+        { transform: `translate(${dx}px,${-dy}px) scale(${2.2 + i * .3})`, opacity: 0 },
+      ], { duration: 1700, delay, easing: "ease-out", fill: "backwards" }).onfinish = () => p.remove();
+    });
+  }
+
+  async function driveBug(then) {
+    if (document.hidden || bugBusy) return;
+    if (!canAnimate()) { if (then) then(); return; }
+    bugBusy = true;
     const vh = innerHeight / 100;
     let lowest = 0;
     menuEl.querySelectorAll(".beer").forEach(b => { lowest = Math.max(lowest, b.getBoundingClientRect().bottom); });
     const road = innerHeight - 1.2 * vh;                // where the tires sit
     const lane = road - (lowest + 1.2 * vh);            // free space under the lowest beer
     const h = Math.max(6 * vh, Math.min(16 * vh, lane));
-    const w = h * BUG_RATIO;
-    bug.style.width = w + "px";
-    bug.style.height = h + "px";
-    bug.style.top = (road - h) + "px";
-    bug.style.visibility = "visible";
+    const w = placeBug(h, road);
+    bounce(h);
+    await roll(-w, innerWidth, 14000, "linear", false);
+    parkBug();
+    if (then) then();
+  }
 
-    const duration = 14000;
-    const distance = innerWidth + w;
-    const drive = bug.animate([{ transform: `translateX(${-w}px)` }, { transform: `translateX(${innerWidth}px)` }],
-                              { duration, easing: "linear" });
-    // wheels turn exactly as far as the car travels, so they roll instead of skid
-    const turns = distance / (TIRE_RADIUS * w) * 180 / Math.PI;
-    rims.forEach(r => r.animate([{ transform: "rotate(0deg)" }, { transform: `rotate(${turns}deg)` }],
-                                { duration, easing: "linear" }));
-    // a little suspension bounce while it drives
-    const b = h * 0.012;
-    car.animate([
-      { transform: "translateY(0) rotate(0deg)" },
-      { transform: `translateY(${-b}px) rotate(-0.4deg)` },
-      { transform: "translateY(0) rotate(0deg)" },
-      { transform: `translateY(${-b * 0.6}px) rotate(0.3deg)` },
-      { transform: "translateY(0) rotate(0deg)" },
-    ], { duration: 900, iterations: Math.ceil(duration / 900), easing: "ease-in-out" });
-    drive.onfinish = () => {
-      bug.style.visibility = "hidden";
-      bug.getAnimations({ subtree: true }).forEach(a => a.cancel());
-      if (then) then();
-    };
+  // Sign-up screen visit: right-to-left, ease to a stop mid-screen, pause, puff, pull away.
+  async function promoDrive() {
+    if (!canAnimate() || bugBusy || !promo.classList.contains("show")) return;
+    bugBusy = true;
+    const vh = innerHeight / 100;
+    const road = innerHeight - 1.2 * vh;
+    const joinBottom = promo.querySelector(".join").getBoundingClientRect().bottom;
+    const h = Math.max(8 * vh, Math.min(14 * vh, road - (joinBottom + 1.5 * vh)));
+    const w = placeBug(h, road);
+    const mid = (innerWidth - w) / 2;
+    const bob = bounce(h);
+    await roll(innerWidth, mid, 5200, "cubic-bezier(.25,.6,.45,1)", true);   // cruising in, braking
+    bob.pause();
+    await wait(1400);                                                         // brief pause
+    const top = parseFloat(bug.style.top);
+    puff(mid + w * (1 - EXHAUST.x), top + h * EXHAUST.y, h, 1);               // tailpipe is on the right when facing left
+    await wait(250);
+    bob.play();
+    await roll(mid, -w, 4200, "cubic-bezier(.55,0,.8,.45)", true);            // pulling away
+    parkBug();
   }
 
   /* Every other bug run (so every 4 minutes), the community sign-up screen
-     fades in right after the bug leaves, stays 30 seconds, then fades out. */
+     fades in right after the bug leaves, stays 30 seconds, then fades out.
+     The bug drives back across it 10 seconds in. */
   const promo = document.getElementById("promo");
-  const PROMO_MS = 30000;
+  const PROMO_MS = 30000, PROMO_BUG_AT = 10000;
   function showPromo() {
     promo.classList.add("show");
+    setTimeout(promoDrive, PROMO_BUG_AT);
     setTimeout(() => promo.classList.remove("show"), PROMO_MS);
   }
   let runs = 0;
   const driveEvery = new URLSearchParams(location.search).get("bounce") === "test" ? 20000 : 120000;
   setInterval(() => {
-    if (promo.classList.contains("show")) return;     // never drive over the sign-up screen
+    if (promo.classList.contains("show")) return;     // the menu-run never drives over the sign-up screen
     runs++;
     driveBug(runs % 2 === 0 ? showPromo : null);
   }, driveEvery);
-  if (new URLSearchParams(location.search).get("promo") === "show") promo.classList.add("show"); // preview it
+  if (new URLSearchParams(location.search).get("promo") === "show") {   // preview: stays up, bug every 30s
+    promo.classList.add("show");
+    setTimeout(promoDrive, PROMO_BUG_AT);
+    setInterval(promoDrive, PROMO_MS);
+  }
 
   document.fonts.ready.then(refresh);
   window.addEventListener("resize", fit);
