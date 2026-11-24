@@ -210,8 +210,8 @@
     </div>
   </div>
 
-<script>window.HGB_BUILD = "20261123-2";</script>
-<script src="menu-data.js?v=20261123-2"></script>
+<script>window.HGB_BUILD = "20261123-3";</script>
+<script src="menu-data.js?v=20261123-3"></script>
 <script>
   const menuEl = document.getElementById("menu");
   const boxEl = document.getElementById("box");
@@ -348,7 +348,7 @@
 
   // Sign-up screen visit: right-to-left, ease to a stop mid-screen, pause, puff, pull away.
   async function promoDrive() {
-    if (!canAnimate() || bugBusy || !promo.classList.contains("show")) return;
+    if (!canAnimate() || bugBusy || !promo.classList.contains("show")) return false;
     bugBusy = true;
     const vh = innerHeight / 100;
     const road = innerHeight - 1.2 * vh;
@@ -366,17 +366,23 @@
     bob.play();
     await roll(mid, -w, 4200, "cubic-bezier(.55,0,.8,.45)", true);            // pulling away
     parkBug();
+    return true;
   }
 
   /* Every other bug run (so every 4 minutes), the community sign-up screen
-     fades in right after the bug leaves, stays 30 seconds, then fades out.
-     The bug drives back across it 10 seconds in. */
+     fades in right after the bug leaves. 10 seconds in, the bug drives back
+     across it; as soon as the bug is off-screen it fades back to the tap menu
+     (~21s in all). If the bug can't run (reduced motion, screen asleep), the
+     sign-up screen just stays 30 seconds. */
   const promo = document.getElementById("promo");
   const PROMO_MS = 30000, PROMO_BUG_AT = 10000;
   function showPromo() {
+    const hide = () => promo.classList.remove("show");
     promo.classList.add("show");
-    setTimeout(promoDrive, PROMO_BUG_AT);
-    setTimeout(() => promo.classList.remove("show"), PROMO_MS);
+    setTimeout(async () => {
+      if (await promoDrive()) hide();             // back to the tap menu once the bug leaves
+      else setTimeout(hide, PROMO_MS - PROMO_BUG_AT);
+    }, PROMO_BUG_AT);
   }
   let runs = 0;
   const driveEvery = new URLSearchParams(location.search).get("bounce") === "test" ? 20000 : 120000;
