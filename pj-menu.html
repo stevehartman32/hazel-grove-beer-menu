@@ -185,6 +185,8 @@
   function fill() {
     menuEl.classList.add("fitting");
     fitToBox(menuEl, boxEl, { min: 30, max: 400 });
+    // menu items at 50% of the full-page fit
+    menuEl.style.setProperty("--scale", parseFloat(menuEl.style.getPropertyValue("--scale")) * 0.5);
     menuEl.classList.remove("fitting");
   }
 
