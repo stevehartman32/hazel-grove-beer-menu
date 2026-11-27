@@ -73,7 +73,8 @@
     display: flex; flex-direction: column; justify-content: space-evenly;
     font-size: calc(20pt * var(--scale));
   }
-  #menu.fitting { height: auto; justify-content: flex-start; }
+  #menu { padding: 0 1in; }   /* items and prices inset ~1" from each side */
+  #menu.fitting { height: auto; justify-content: flex-start; padding: 0; }
   #menu.two-col { display: grid; grid-auto-flow: column; column-gap: .5in; align-content: space-evenly; }
   #menu.two-col.fitting { align-content: start; }
   .item { display: flex; align-items: baseline; gap: .35em; padding: .16em 0; break-inside: avoid; }
