@@ -6,7 +6,8 @@
         Tap Number | Name | Style | Category | ABV | Tap Price | 4 Pack Price
       - Only beers WITH a Tap Number are shown; clear it to take a beer off.
       - Beers are listed in tap-number order, grouped by Category.
-      - Optional extra columns: Description, On Tap (Y/N).
+      - Optional extra columns: Description, On Tap (Y/N), Serving,
+        Bottle (x = sold by the bottle; shows BOT instead of 4PK).
    2. In the sheet: Share > General access > "Anyone with the link" > Viewer.
    3. Paste the sheet's ID (the long string between /d/ and /edit in the
       sheet's URL) into SHEET_ID below. Set SHEET_TAB to the tab name.
@@ -75,6 +76,7 @@ function csvToMenu(text) {
     fourPack: col("packprice", "pack", "fourpack", "fourpackprice", "cans"),
     onTap: col("ontap", "active", "show", "available"),
     serving: col("serving", "servingsize", "glass", "glassware"),
+    bottle: col("bottle", "bottles", "bot"),
   };
   const get = (r, k) => (idx[k] >= 0 && r[idx[k]] != null ? r[idx[k]].trim() : "");
   const money = v => (v && /^\d/.test(v) ? "$" + v : v);
@@ -104,6 +106,7 @@ function csvToMenu(text) {
     byName[cat].beers.push({
       tapNo: get(r, "tapNo"), name, style: get(r, "style"), abv,
       description: get(r, "desc"), serving: get(r, "serving"), price: money(get(r, "price")), fourPack: money(get(r, "fourPack")),
+      bottle: ["x", "y", "yes", "true", "1"].includes(get(r, "bottle").toLowerCase()), // sold by the bottle: label "BOT" instead of "4PK"
     });
   }
   return groups;

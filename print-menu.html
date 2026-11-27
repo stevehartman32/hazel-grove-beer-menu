@@ -149,8 +149,8 @@
     </div>
   </div>
 
-<script>window.HGB_BUILD = "20261123-3";</script>
-<script src="menu-data.js?v=20261123-3"></script>
+<script>window.HGB_BUILD = "20261127-2";</script>
+<script src="menu-data.js?v=20261127-2"></script>
 <script>
   const menuEl = document.getElementById("menu");
   const boxEl = document.getElementById("box");
@@ -178,7 +178,7 @@
               <span class="name">${escapeHTML(b.name)}</span>
               ${b.price || b.fourPack ? `<span class="dots"></span>` : ""}
               ${b.price ? `<span class="price">${escapeHTML(b.price)}</span>` : ""}
-              ${b.fourPack ? `<span class="pack"><small>4PK</small> ${escapeHTML(b.fourPack)}</span>` : ""}
+              ${b.fourPack ? `<span class="pack"><small>${b.bottle ? "BOT" : "4PK"}</small> ${escapeHTML(b.fourPack)}</span>` : ""}
             </div>
             <div class="style">${escapeHTML(b.style)}${b.style && b.abv ? " &middot; " : ""}${b.abv ? `<span class="abv">${escapeHTML(b.abv)}</span>` : ""}</div>
             ${b.serving ? `<div class="serving">${escapeHTML(b.serving)}</div>` : ""}
