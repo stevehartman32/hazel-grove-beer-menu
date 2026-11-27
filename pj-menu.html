@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pastrami Jack's Menu — Print Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Almarai:wght@400;700;800&family=Oswald:wght@500;600;700&family=Yellowtail&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red: #E2493E;       /* Hazel Grove brand red */
+    --charcoal: #2E2B28;  /* brand charcoal */
+    --paper: #FFFFFF;
+    --desk: #5b5752;
+    --scale: 1;
+    --page-w: 8.5in;
+    --page-h: 11in;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--desk);
+    font-family: "Almarai", Helvetica, Arial, sans-serif;
+    color: var(--charcoal);
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+
+  /* ---------- Toolbar (screen only) ---------- */
+  .toolbar {
+    position: sticky; top: 0; z-index: 5;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
+    padding: 12px 20px; background: var(--charcoal); color: #fff; font-size: 14px;
+  }
+  .toolbar h1 { font-size: 16px; font-weight: 700; margin-right: auto; }
+  .toolbar label { display: flex; align-items: center; gap: 6px; }
+  .toolbar select { font: inherit; padding: 6px 8px; border-radius: 6px; border: 0; }
+  .toolbar button {
+    font: inherit; font-weight: 700; cursor: pointer;
+    padding: 8px 16px; border-radius: 6px; border: 2px solid var(--red);
+    background: transparent; color: #fff;
+  }
+  .toolbar button.primary { background: var(--red); }
+  .toolbar button:hover { filter: brightness(1.1); }
+  #status { width: 100%; font-size: 12px; opacity: .75; }
+  #status.err { color: #ffb3ad; opacity: 1; }
+
+  /* ---------- Page preview ---------- */
+  .stage { padding: 32px 16px 64px; display: flex; justify-content: center; }
+  .page {
+    width: var(--page-w); height: var(--page-h);
+    background: var(--paper);
+    box-shadow: 0 10px 40px rgba(0,0,0,.45);
+    padding: .5in .6in .42in;
+    display: grid; grid-template-rows: auto 1fr auto;
+    position: relative; overflow: hidden;
+  }
+  .page::before { /* thin red frame */
+    content: ""; position: absolute; inset: .2in;
+    border: 2.5pt solid var(--red); border-radius: 4pt; pointer-events: none;
+  }
+  .page header { text-align: center; }
+  .page header .title {
+    font-family: "Yellowtail", cursive; color: var(--red);
+    font-size: 40pt; line-height: 1.05;
+  }
+  .page header .rule { width: 2.4in; height: 2pt; background: var(--red); margin: .2in auto 0; border-radius: 2pt; }
+
+  /* The list fills the page: font size is fitted to the space, then rows are
+     spread evenly down the page. */
+  #box { position: relative; min-height: 0; overflow: hidden; margin-top: .22in; }
+  #menu {
+    height: 100%;
+    display: flex; flex-direction: column; justify-content: space-evenly;
+    font-size: calc(20pt * var(--scale));
+  }
+  #menu.fitting { height: auto; justify-content: flex-start; }
+  #menu.two-col { display: grid; grid-auto-flow: column; column-gap: .5in; align-content: space-evenly; }
+  #menu.two-col.fitting { align-content: start; }
+  .item { display: flex; align-items: baseline; gap: .35em; padding: .16em 0; break-inside: avoid; }
+  .item .name {
+    font-family: "Oswald", "Arial Narrow", sans-serif; font-weight: 700;
+    font-style: italic; text-transform: uppercase; line-height: 1.1; white-space: nowrap;
+  }
+  .item .dots { flex: 1; min-width: .6em; border-bottom: 1.5pt dotted rgba(46,43,40,.35); transform: translateY(-.25em); }
+  .item .price { font-family: "Oswald", sans-serif; font-weight: 700; color: var(--red); white-space: nowrap; }
+
+  .page footer {
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: "Oswald", sans-serif; text-transform: uppercase;
+    letter-spacing: .1em; font-size: 9pt; color: var(--red);
+    border-top: 1.5pt solid var(--red); padding-top: .08in; margin-top: .1in;
+  }
+  .page footer img { height: .42in; display: block; }
+
+  /* ---------- Print ---------- */
+  @page { size: letter portrait; margin: 0; }
+  @media print {
+    body { background: #fff; }
+    .toolbar { display: none; }
+    .stage { padding: 0; display: block; }
+    .page { box-shadow: none; margin: 0; page-break-after: avoid; }
+  }
+</style>
+<style id="page-size"></style>
+</head>
+<body>
+  <div class="toolbar">
+    <h1>Pastrami Jack's — Printed Menu</h1>
+    <label>Paper
+      <select id="paper">
+        <option value="letter">Letter (8.5 × 11)</option>
+        <option value="legal">Legal (8.5 × 14)</option>
+        <option value="half">Half Letter (5.5 × 8.5)</option>
+      </select>
+    </label>
+    <button id="reload" type="button">Reload from Sheet</button>
+    <button id="print" class="primary" type="button">Print</button>
+    <div id="status"></div>
+  </div>
+
+  <div class="stage">
+    <div class="page" id="page">
+      <header>
+        <div class="title">Pastrami Jack's<br>Friday Friendsgiving Menu</div>
+        <div class="rule"></div>
+      </header>
+      <div id="box"><div id="menu"></div></div>
+      <footer>
+        <span>Served at Hazel Grove Brewing</span>
+        <img src="assets/logo-horizontal-red.svg" alt="Hazel Grove Brewing">
+      </footer>
+    </div>
+  </div>
+
+<script>window.HGB_BUILD = "20261127-1";</script>
+<script src="menu-data.js?v=20261127-1"></script>
+<script>
+  /* Reads the "PJ Menu" tab (columns: Item | Price). The export link returns
+     cells exactly as typed, so text prices like "Market" come through too. */
+  const PJ_TAB_GID = "14445229";
+
+  const menuEl = document.getElementById("menu");
+  const boxEl = document.getElementById("box");
+  const statusEl = document.getElementById("status");
+  const pageEl = document.getElementById("page");
+  const paperEl = document.getElementById("paper");
+  const titleEl = pageEl.querySelector("header .title");
+
+  const PAPERS = {
+    letter: { w: "8.5in", h: "11in",  css: "letter portrait", title: "40pt" },
+    legal:  { w: "8.5in", h: "14in",  css: "legal portrait",  title: "46pt" },
+    half:   { w: "5.5in", h: "8.5in", css: "5.5in 8.5in",     title: "26pt" },
+  };
+
+  async function loadItems() {
+    const id = sheetSettings().id;
+    const url = `https://docs.google.com/spreadsheets/d/${encodeURIComponent(id)}/export?format=csv&gid=${PJ_TAB_GID}&_=${Date.now()}`;
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const text = await res.text();
+    if (text.trim().startsWith("<")) throw new Error("Sheet isn't shared publicly (Anyone with the link → Viewer)");
+    const rows = parseCSV(text);
+    const header = (rows[0] || []).map(h => h.trim().toLowerCase());
+    let iName = header.indexOf("item"), iPrice = header.indexOf("price");
+    if (iName < 0) iName = 0;
+    if (iPrice < 0) iPrice = 1;
+    return rows.slice(1)
+      .map(r => ({ name: (r[iName] || "").trim(), price: (r[iPrice] || "").trim() }))
+      .filter(x => x.name)
+      .map(x => ({ ...x, price: /^\d/.test(x.price) ? "$" + x.price : x.price }));
+  }
+
+  function render(items) {
+    menuEl.innerHTML = items.map(x => `
+      <div class="item">
+        <span class="name">${escapeHTML(x.name)}</span>
+        ${x.price ? `<span class="dots"></span><span class="price">${escapeHTML(x.price)}</span>` : ""}
+      </div>`).join("");
+    const two = items.length > 16;
+    menuEl.classList.toggle("two-col", two);
+    menuEl.style.gridTemplateRows = two ? `repeat(${Math.ceil(items.length / 2)}, auto)` : "";
+  }
+
+  // Largest font that fits, then spread the rows evenly down the page
+  function fill() {
+    menuEl.classList.add("fitting");
+    fitToBox(menuEl, boxEl, { min: 30, max: 400 });
+    menuEl.classList.remove("fitting");
+  }
+
+  function applyPaper() {
+    const p = PAPERS[paperEl.value];
+    pageEl.style.setProperty("--page-w", p.w);
+    pageEl.style.setProperty("--page-h", p.h);
+    titleEl.style.fontSize = p.title;
+    document.getElementById("page-size").textContent = `@page { size: ${p.css}; margin: 0; }`;
+    fill();
+  }
+
+  async function load() {
+    statusEl.className = "";
+    statusEl.textContent = "Loading…";
+    try {
+      const items = await loadItems();
+      render(items);
+      statusEl.textContent = `Loaded ${items.length} items from the "PJ Menu" tab at ${new Date().toLocaleTimeString()}`;
+    } catch (err) {
+      statusEl.className = "err";
+      statusEl.textContent = `Couldn't load the PJ Menu tab: ${err.message}`;
+    }
+    applyPaper();
+  }
+
+  paperEl.addEventListener("change", applyPaper);
+  document.getElementById("reload").addEventListener("click", load);
+  document.getElementById("print").addEventListener("click", () => window.print());
+  reloadIfNewVersion().then(reloading => { if (!reloading) document.fonts.ready.then(load); });
+</script>
+</body>
+</html>

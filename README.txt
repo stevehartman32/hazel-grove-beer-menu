@@ -6,6 +6,8 @@ Files
                         Re-reads the Google Sheet every 2 minutes; text auto-sizes to fit.
   print-menu.html       Print preview (white page, brand red #E2493E) + Print button.
                         Choose Letter / Legal / Half Letter and edit the date line.
+  pj-menu.html          Pastrami Jack's print menu from the "PJ Menu" tab (Item | Price).
+                        Font auto-sizes to fill the sheet; 2 columns past 16 items.
   menu-data.js          Google Sheet settings + shared loader. EDIT SHEET_ID HERE.
   beer-menu-template.csv  Starter data — import into a new Google Sheet.
   assets/               Logos copied from "Hazel Grove Logo Files".
